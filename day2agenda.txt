@@ -1,0 +1,19 @@
+- Game geometry / map
+	- requires: new path finding
+
+- placable barricades? destructible terrain?
+
+- score
+
+- health pickups
+
+- more weapons
+	- bullet types?
+	- explosives?
+
+- pixel art
+
+- sound
+
+- Pause/restart the game
+

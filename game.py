@@ -83,7 +83,7 @@
         "x": 200, "y": 180, 
         "dx": 0, "dy": 1, 
         "w": 10, "h": 20, 
-        "weapon": "assault_rifle",
+        "weapon": "shotgun",
         "health": 1.0,
         "damage_cooldown": 0,
         "weapon_cooldown": 0,
