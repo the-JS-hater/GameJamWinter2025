@@ -15,7 +15,7 @@
     # GUI constants
     window_w := 680,
     window_h := 420,
-    healthbar_w := 120,
+    healthbar_w := 180,
     healthbar_h := 25,
     
     # HELPER FUNCTIONS
@@ -42,19 +42,48 @@
             "dy": dy,
         })
     ),
+
+    fire_shotgun := lambda x, y, dx, dy : (
+        bullets.append(
+            {
+                "x": x,
+                "y": y,
+                "dx": dx,
+                "dy": dy,
+            }
+        ),
+        bullets.append(
+            {
+                "x": x,
+                "y": y,
+                "dx": dx - dy * 0.2,
+                "dy": dy + dx * 0.2,
+            }
+        ),
+        bullets.append(
+            {
+                "x": x,
+                "y": y,
+                "dx": dx + dy * 0.2,
+                "dy": dy - dx * 0.2,
+            }
+        )
+    ),
+    
+
     # Game constants
     bullet_speed := 8,
     robot_speed := 0.5,
 
     # Game state
-    weapons := {"pistol": fire_pistol},
-    weapon_cooldowns := {"pistol": 60},
+    weapons := {"pistol": fire_pistol, "assault_rifle": fire_pistol, "shotgun": fire_shotgun},
+    weapon_cooldowns := {"pistol": 60, "shotgun": 90, "assault_rifle": 10},
 
     player := {
         "x": 200, "y": 180, 
         "dx": 0, "dy": 1, 
         "w": 10, "h": 20, 
-        "weapon": "pistol",
+        "weapon": "assault_rifle",
         "health": 1.0,
         "damage_cooldown": 0,
         "weapon_cooldown": 0,
