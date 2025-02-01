@@ -1,6 +1,8 @@
 - Game geometry / map
 	- requires: new path finding
 
+- weapon pickups
+
 - placable barricades? destructible terrain?
 
 - score

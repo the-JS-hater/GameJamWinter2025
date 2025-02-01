@@ -13,11 +13,12 @@
     globimport("math"),
 
     # GUI constants
-    window_w := 680,
-    window_h := 420,
+
+    window_w := 1080,
+    window_h := 720,
     healthbar_w := 180,
     healthbar_h := 25,
-    
+
     # HELPER FUNCTIONS
     
     has_collision := lambda a, b: not any([
@@ -72,10 +73,21 @@
     
 
     # Game constants
+
     bullet_speed := 8,
     robot_speed := 0.5,
 
     # Game state
+    
+    map := [
+        list(map(int, l.replace("\n", "")))
+        for l in
+        open("testMap.txt", 'r').readlines()
+    ],
+
+    grid_size_w := len(map[0]), 
+    grid_size_h := len(map),
+
     weapons := {"pistol": fire_pistol, "assault_rifle": fire_pistol, "shotgun": fire_shotgun},
     weapon_cooldowns := {"pistol": 60, "shotgun": 90, "assault_rifle": 10},
 
@@ -202,6 +214,15 @@
             # RENDER
             begin_drawing(),
             clear_background(BLACK),
+            [[draw_rectangle(
+                int(x * (window_w / grid_size_w)),
+                int(y * (window_h / grid_size_h)),
+                int(window_w / grid_size_w + 1),
+                int(window_h / grid_size_h + 1),
+                BROWN,
+            ) for x in range(grid_size_w)
+            if map[y][x]] 
+             for y in range(grid_size_h)],
             [draw_rectangle(
                 int(entity["x"]),
                 int(entity["y"]),
@@ -223,8 +244,8 @@
                 RED,
             ),
             draw_rectangle(
-                int(0 + window_w * 0.1), 
-                int(0 + window_h * 0.9),
+                int(0 + window_w * 0.8), 
+                int(0 + window_h * 0.1),
                 int(player["health"] * healthbar_w),
                 healthbar_h,
                 BLUE,
