@@ -3,8 +3,6 @@
 
 - weapon pickups
 
-- placable barricades? destructible terrain?
-
 - score
 
 - health pickups
@@ -12,6 +10,8 @@
 - more weapons
 	- bullet types?
 	- explosives?
+
+- placable barricades? destructible terrain?
 
 - pixel art
 

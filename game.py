@@ -29,6 +29,7 @@
     Player := classdef("Player", ["x", "y", "dx", "dy", "w", "h", "weapon", "health", "damage_cooldown", "weapon_cooldown"]),
     Robot := classdef("Robot", ["x", "y", "w", "h"]),
     Bullet := classdef("Bullet", ["x", "y", "dx", "dy"]),
+    Wall := classdef("Wall", ["x", "y", "w", "h"]),
 
     # HELPER FUNCTIONS
     
@@ -141,7 +142,18 @@
                 dx = moved_player.dx,
                 dy = moved_player.dy,
             )
-                if (moved_player.dx != 0 or moved_player.dy != 0) else None,
+                if (moved_player.dx != 0 or moved_player.dy != 0)
+                and not any(
+                has_collision(moved_player, Wall(
+                    x = x * (window_w / grid_size_w), 
+                    y = y * (window_h / grid_size_h), 
+                    w = window_w / grid_size_w, 
+                    h = window_h / grid_size_h))
+                for x in range(len(map[0]))
+                    for y in range(len(map)) 
+                        if map[y][x] != 0
+            ) 
+            else None,
             
             #    and
             #    not any(
