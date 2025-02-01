@@ -147,13 +147,13 @@
         weapon_cooldown = 0,
     ),
 
-    robot1 := Robot(x = 50, y = 50, w = 10, h = 20),
-    robot2 := Robot(x = 150, y = 220, w = 10, h = 20),
+    robot1 := Robot(x = 50, y = 50, w = 32, h = 32),
+    robot2 := Robot(x = 150, y = 220, w = 32, h = 32),
     robots := [robot1, robot2],
     bullets := [],
     pickups := [
-        WeaponPickup(x = 500, y = 200, w = 10, h = 10, weapon = "shotgun", ammo = 5),
-        WeaponPickup(x = 200, y = 500, w = 10, h = 10, weapon = "assault_rifle", ammo = 30),
+        WeaponPickup(x = 500, y = 200, w = 32, h = 32, weapon = "shotgun", ammo = 5),
+        WeaponPickup(x = 200, y = 500, w = 32, h = 32, weapon = "assault_rifle", ammo = 30),
     ],
 
     reduce(lambda _, a : None, takewhile(
@@ -314,9 +314,9 @@
              for y in range(grid_size_h)],
             [draw_rectangle(
                 int(entity.x),
-                int(entity.y),
+                int(entity.y - entity.h),
                 int(entity.w),
-                int(entity.h),
+                int(entity.h * 2),
                 GREEN,
             ) for entity in robots],
             [draw_circle(
