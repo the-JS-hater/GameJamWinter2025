@@ -16,8 +16,8 @@
 
     # GUI constants
 
-    window_w := 1080,
-    window_h := 720,
+    window_w := 1920,
+    window_h := 1080,
     healthbar_w := 180,
     healthbar_h := 15,
     dead_msg_font_size := 50,
@@ -209,7 +209,7 @@
     weapon_ammos := {"pistol": float("inf"), "shotgun": 5, "assault_rifle": 30},
     
     player := Player(
-        x = 180, y = 120, 
+        x = 960, y = 540, 
         dx = 0, dy = 1, 
         w = 32, h = 32, 
         weapon = "pistol",
