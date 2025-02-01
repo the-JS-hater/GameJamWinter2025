@@ -20,6 +20,15 @@
     healthbar_w := 180,
     healthbar_h := 25,
 
+    # Init Raylib
+    
+    set_target_fps(60),
+    set_trace_log_level(7), 
+    init_window(window_w, window_h, "game"),
+    
+    # Textures
+    player_texture := load_texture("resources/Player.png"),
+
     # Classes
     classdef := lambda name, fields: (ty := type(name, (), {
         "__init__": lambda self, **vals: [setattr(self, n, vals[n]) for n in fields][0],
@@ -126,11 +135,11 @@
 
     weapons := {"pistol": fire_pistol, "assault_rifle": fire_pistol, "shotgun": fire_shotgun},
     weapon_cooldowns := {"pistol": 60, "shotgun": 90, "assault_rifle": 10},
-
+    
     player := Player(
-        x = 200, y = 180, 
+        x = 180, y = 120, 
         dx = 0, dy = 1, 
-        w = 10, h = 20, 
+        w = 32, h = 32, 
         weapon = "pistol",
         health = 1.0,
         damage_cooldown = 0,
@@ -146,9 +155,6 @@
         WeaponPickup(x = 200, y = 500, w = 10, h = 10, weapon = "assault_rifle"),
     ],
 
-    set_target_fps(60),
-    set_trace_log_level(7), 
-    init_window(window_w, window_h, "game"),
     reduce(lambda _, a : None, takewhile(
         lambda _ : not window_should_close(),
         ((
@@ -321,12 +327,14 @@
                 int(pickup.h),
                 PINK,
             ) for pickup in pickups],
-            draw_rectangle(
-                int(player.x),
-                int(player.y),
-                int(player.w),
-                int(player.h),
-                RED,
+            draw_texture_rec(
+                player_texture,
+                (0, 0, 32, 64) if player.dx < 0
+                else (96, 0, 32, 64) if player.dx > 0 
+                else (32, 0, 32, 64) if player.dy < 0
+                else (64, 0, 32, 64),
+                (player.x, player.y - 32),
+                WHITE
             ),
             draw_rectangle(
                 int(0 + window_w * 0.8), 
