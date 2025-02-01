@@ -118,7 +118,7 @@
                     x = random.randint(0, window_w - 32),
                     y = random.randint(0, window_h - 32),
                     w = 32,
-                    h = 32,
+                    h = 64,
                     dx = 0,
                     dy = 0,
                 ) for _ in cycle([1])
@@ -313,7 +313,7 @@
             globals().update(
                 robots = [(
                     tx := int((r.x + r.w / 2) / grid_scale_w),
-                    ty := int((r.y + r.h / 2) / grid_scale_h),
+                    ty := int((r.y + r.h * 3 / 4) / grid_scale_h),
                     (
                         target := min(
                             [(tx - 1, ty), (tx + 1, ty), (tx, ty - 1), (tx, ty + 1)],
@@ -324,7 +324,7 @@
                             ),
                         ),
                         dx := (target[0] + 0.5) * grid_scale_w - (r.x + r.w / 2),
-                        dy := (target[1] + 0.5) * grid_scale_h - (r.y + r.h / 2),
+                        dy := (target[1] + 0.5) * grid_scale_h - (r.y + r.h * 3 / 4),
                     ) if (ptx, pty) != (tx, ty) else (
                         dx := player.x - r.x,
                         dy := player.y - r.y,
@@ -390,7 +390,7 @@
                 else (32, 0, 32, 64) if robot.dx > abs(robot.dy) 
                 else (96, 0, 32, 64) if robot.dy < 0
                 else (0, 0, 32, 64),
-                (int(robot.x), int(robot.y) - 32),
+                (int(robot.x), int(robot.y)),
                 WHITE
             ) for robot in robots],
             [draw_circle(
