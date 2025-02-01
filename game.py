@@ -28,6 +28,9 @@
     
     # Textures
     player_texture := load_texture("resources/Player.png"),
+    pistol_texture := load_texture("resources/Pistol.png"),
+    shotgun_texture := load_texture("resources/Shotgun.png"),
+    assault_rifle_texture := load_texture("resources/MachineGun.png"),
 
     # Classes
     classdef := lambda name, fields: (ty := type(name, (), {
@@ -325,12 +328,12 @@
                 int(2.0),
                 YELLOW,
             ) for bullet in bullets],
-            [draw_rectangle(
-                int(pickup.x),
-                int(pickup.y),
-                int(pickup.w),
-                int(pickup.h),
-                PINK,
+            [draw_texture(
+                shotgun_texture if pickup.weapon == "shotgun"
+                else assault_rifle_texture,
+                pickup.x,
+                pickup.y,
+                WHITE
             ) for pickup in pickups],
             draw_texture_rec(
                 player_texture,
