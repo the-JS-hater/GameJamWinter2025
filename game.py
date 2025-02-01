@@ -11,6 +11,7 @@
     globimport("itertools"),
     globimport("functools"),
     globimport("math"),
+    globimport("heapq"),
 
     # GUI constants
 
@@ -77,6 +78,32 @@
         ))
     ),
     
+    map_dist_to := lambda x, y: (
+        dist_to := [[10**10] * grid_size_w for _ in range(grid_size_h)],
+        queue := [(0, x, y)],
+
+        list(takewhile(
+            lambda _: len(queue) > 0,
+            ((
+                p := heappop(queue),
+                (
+                    dist_to[p[2]].__setitem__(p[1], p[0]),
+                    [
+                        heappush(queue, (p[0] + dc, p[1] + dx, p[2] + dy))
+                        for dx, dy, dc in [
+                            (0, 1, 1.0), (0, -1, 1.0), (1, 0, 1.0), (-1, 0, 1.0),
+                            (1, 1, 1.4), (1, -1, 1.4), (-1, 1, 1.4), (-1, -1, 1.4),
+                        ]
+                    ],
+                )
+                if 0 <= p[1] < grid_size_w
+                    and 0 <= p[2] < grid_size_h
+                    and not map[p[2]][p[1]]
+                    and dist_to[p[2]][p[1]] == 10**10
+                else None
+            ) for _ in cycle([1]))
+        )),
+    )[0],
 
     # Game constants
 
@@ -91,8 +118,10 @@
         open("testMap.txt", 'r').readlines()
     ],
 
-    grid_size_w := len(map[0]), 
+    grid_size_w := len(map[0]),
     grid_size_h := len(map),
+    grid_scale_w := window_w / grid_size_w,
+    grid_scale_h := window_h / grid_size_h,
 
     weapons := {"pistol": fire_pistol, "assault_rifle": fire_pistol, "shotgun": fire_shotgun},
     weapon_cooldowns := {"pistol": 60, "shotgun": 90, "assault_rifle": 10},
@@ -145,10 +174,10 @@
                 if (moved_player.dx != 0 or moved_player.dy != 0)
                 and not any(
                 has_collision(moved_player, Wall(
-                    x = x * (window_w / grid_size_w), 
-                    y = y * (window_h / grid_size_h), 
-                    w = window_w / grid_size_w, 
-                    h = window_h / grid_size_h))
+                    x = x * grid_scale_w, 
+                    y = y * grid_scale_h, 
+                    w = grid_scale_w, 
+                    h = grid_scale_h))
                 for x in range(len(map[0]))
                     for y in range(len(map)) 
                         if map[y][x] != 0
@@ -205,10 +234,26 @@
             ]),
 
             # Update robots
+            dist_to_player := map_dist_to(
+                int(player.x / grid_scale_w),
+                int(player.y / grid_scale_h),
+            ),
             globals().update(
                 robots = [(
-                    dx := player.x - r.x,
-                    dy := player.y - r.y,
+                    tx := int((r.x + r.w / 2) / grid_scale_w),
+                    ty := int((r.y + r.h / 2) / grid_scale_h),
+                    target := min(
+                        [
+                            (tx - 1, ty), (tx + 1, ty), (tx, ty - 1), (tx, ty + 1),
+                        ],
+                        key = lambda p: (
+                            dist_to_player[p[1]][p[0]]
+                            if 0 <= p[0] < grid_size_w and 0 <= p[1] < grid_size_h
+                            else 10**10
+                        ),
+                    ),
+                    dx := (target[0] + 0.5) * grid_scale_w - (r.x + r.w / 2),
+                    dy := (target[1] + 0.5) * grid_scale_h - (r.y + r.h / 2),
                     dist := hypot(dx, dy),
                     r.copy_with(
                         x = r.x + dx / dist * robot_speed,
@@ -231,10 +276,10 @@
             begin_drawing(),
             clear_background(BLACK),
             [[draw_rectangle(
-                int(x * (window_w / grid_size_w)),
-                int(y * (window_h / grid_size_h)),
-                int(window_w / grid_size_w + 1),
-                int(window_h / grid_size_h + 1),
+                int(x * grid_scale_w),
+                int(y * grid_scale_h),
+                int(grid_scale_w + 1),
+                int(grid_scale_h + 1),
                 BROWN,
             ) for x in range(grid_size_w)
             if map[y][x]] 
