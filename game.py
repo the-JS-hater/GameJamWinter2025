@@ -119,7 +119,7 @@
                 ) for _ in cycle([1])
             ),
         )))
-    ) if len(robots) < 5 else None,
+    ) if len(robots) < robot_cap else None,
 
     spawn_weapon := lambda: (
         weapon_pickups.append(next(filter(
@@ -184,7 +184,7 @@
     # Game constants
 
     bullet_speed := 8,
-    robot_speed := 0.5,
+    robot_speed := 1.0,
 
     # Game state
     
@@ -218,21 +218,22 @@
     bullets := [],
     weapon_pickups := [],
     health_pickups := [],
-
+    robot_cap := 3,
 
     reduce(lambda _, a : None, takewhile(
         lambda _ : not window_should_close(),
         ((
+            globals().update(robot_cap = robot_cap + 1 / 60 / 10),
             # INPUT 
             # & UPDATE
             
             moved_player := player.copy_with(
                 x = player.x
-                    - (1 if is_key_down(KeyboardKey.KEY_LEFT) else 0)
-                    + (1 if is_key_down(KeyboardKey.KEY_RIGHT) else 0),
+                    - (2 if is_key_down(KeyboardKey.KEY_LEFT) else 0)
+                    + (2 if is_key_down(KeyboardKey.KEY_RIGHT) else 0),
                 y = player.y
-                    - (1 if is_key_down(KeyboardKey.KEY_UP) else 0)
-                    + (1 if is_key_down(KeyboardKey.KEY_DOWN) else 0),
+                    - (2 if is_key_down(KeyboardKey.KEY_UP) else 0)
+                    + (2 if is_key_down(KeyboardKey.KEY_DOWN) else 0),
             ),
 
             moved_player.update(
