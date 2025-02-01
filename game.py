@@ -29,6 +29,7 @@
     
     # Textures
     player_texture := load_texture("resources/Player.png"),
+    robot_texture := load_texture("resources/Robot.png"),
     pistol_texture := load_texture("resources/Pistol.png"),
     shotgun_texture := load_texture("resources/Shotgun.png"),
     assault_rifle_texture := load_texture("resources/MachineGun.png"),
@@ -232,15 +233,6 @@
                 and not has_world_collision(moved_player)
             else None,
             
-            #    and
-            #    not any(
-            #        has_collision(moved_player, entity)
-            #    for entity in robots) else None,
-            
-            # player.update(
-            #     damage_cooldown = player["damage_cooldown"] - 1
-            # ) if player["damage_cooldown"] > 0 else None,
-
             # Update cooldowns
             update_cooldowns(player),
             
@@ -353,13 +345,15 @@
             ) for x in range(grid_size_w)
             if map[y][x]] 
              for y in range(grid_size_h)],
-            [draw_rectangle(
-                int(entity.x),
-                int(entity.y - entity.h),
-                int(entity.w),
-                int(entity.h * 2),
-                GREEN,
-            ) for entity in robots],
+            [draw_texture_rec(
+                robot_texture,
+                (64, 0, 32, 64) if robot.dx < -abs(robot.dy)
+                else (32, 0, 32, 64) if robot.dx > abs(robot.dy) 
+                else (96, 0, 32, 64) if robot.dy < 0
+                else (0, 0, 32, 64),
+                (int(robot.x), int(robot.y) - 32),
+                WHITE
+            ) for robot in robots],
             [draw_circle(
                 int(bullet.x),
                 int(bullet.y),
