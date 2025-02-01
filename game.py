@@ -234,27 +234,29 @@
             ]),
 
             # Update robots
-            dist_to_player := map_dist_to(
-                int(player.x / grid_scale_w),
-                int(player.y / grid_scale_h),
-            ),
+            ptx := int((player.x + player.w / 2) / grid_scale_w),
+            pty := int((player.y + player.h / 2) / grid_scale_h),
+            dist_to_player := map_dist_to(ptx, pty),
             globals().update(
                 robots = [(
                     tx := int((r.x + r.w / 2) / grid_scale_w),
                     ty := int((r.y + r.h / 2) / grid_scale_h),
-                    target := min(
-                        [
-                            (tx - 1, ty), (tx + 1, ty), (tx, ty - 1), (tx, ty + 1),
-                        ],
-                        key = lambda p: (
-                            dist_to_player[p[1]][p[0]]
-                            if 0 <= p[0] < grid_size_w and 0 <= p[1] < grid_size_h
-                            else 10**10
+                    (
+                        target := min(
+                            [(tx - 1, ty), (tx + 1, ty), (tx, ty - 1), (tx, ty + 1)],
+                            key = lambda p: (
+                                dist_to_player[p[1]][p[0]]
+                                if 0 <= p[0] < grid_size_w and 0 <= p[1] < grid_size_h
+                                else 10**10
+                            ),
                         ),
+                        dx := (target[0] + 0.5) * grid_scale_w - (r.x + r.w / 2),
+                        dy := (target[1] + 0.5) * grid_scale_h - (r.y + r.h / 2),
+                    ) if (ptx, pty) != (tx, ty) else (
+                        dx := player.x - r.x,
+                        dy := player.y - r.y,
                     ),
-                    dx := (target[0] + 0.5) * grid_scale_w - (r.x + r.w / 2),
-                    dy := (target[1] + 0.5) * grid_scale_h - (r.y + r.h / 2),
-                    dist := hypot(dx, dy),
+                    dist := max(hypot(dx, dy), 0.01),
                     r.copy_with(
                         x = r.x + dx / dist * robot_speed,
                         y = r.y + dy / dist * robot_speed,
