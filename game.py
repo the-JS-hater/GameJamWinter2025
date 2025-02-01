@@ -46,6 +46,7 @@
     Bullet := classdef("Bullet", ["x", "y", "dx", "dy"]),
     Wall := classdef("Wall", ["x", "y", "w", "h"]),
     WeaponPickup := classdef("WeaponPickup", ["x", "y", "w", "h", "weapon", "ammo"]),
+    HealthPickup := classdef("HealthPickup", ["x", "y", "w", "h", "health"]),
 
     # HELPER FUNCTIONS
     
@@ -121,7 +122,7 @@
     ) if len(robots) < 5 else None,
 
     spawn_weapon := lambda: (
-        pickups.append(next(filter(
+        weapon_pickups.append(next(filter(
             lambda pickup: not has_world_collision(pickup),
             (
                 (lambda weapon: WeaponPickup(
@@ -135,7 +136,23 @@
                 for _ in cycle([1])
             ),
         )))
-    ) if len(pickups) < 3 else None,
+    ) if len(weapon_pickups) < 3 else None,
+
+    spawn_health := lambda: (
+        health_pickups.append(next(filter(
+            lambda pickup: not has_world_collision(pickup),
+            (
+                HealthPickup(
+                    x = random.randint(0, window_w - 32),
+                    y = random.randint(0, window_h - 32),
+                    health = 0.2,
+                    w = 32,
+                    h = 32,
+                )
+                for _ in cycle([1])
+            ),
+        )))
+    ) if len(health_pickups) < 1 else None,
     
     map_dist_to := lambda x, y: (
         dist_to := [[10**10] * grid_size_w for _ in range(grid_size_h)],
@@ -199,7 +216,8 @@
 
     robots := [],
     bullets := [],
-    pickups := [],
+    weapon_pickups := [],
+    health_pickups := [],
 
 
     reduce(lambda _, a : None, takewhile(
@@ -251,7 +269,7 @@
             (
                 weapons[player.weapon](
                     player.x + player.w / 2,
-                    player.y,
+                    player.y + player.h / 4,
                     player.dx,
                     player.dy,
                 ),
@@ -320,17 +338,26 @@
                 bullets = [b for b in bullets if not any(bullet_collision(r, b) for r in robots)],
             ),
 
-            # Pick up weapons
+            # Pick up weapons and health
             globals().update(
-                pickups = [
-                    p for p in pickups if not (
+                weapon_pickups = [
+                    p for p in weapon_pickups if not (
                         coll := has_collision(player, p),
-                        player.update(weapon = p.weapon, ammo = p.ammo) if coll else None
+                        player.update(weapon = p.weapon, ammo = p.ammo)
+                            if coll else None
+                    )[0]
+                ],
+                health_pickups = [
+                    p for p in health_pickups if not (
+                        coll := has_collision(player, p),
+                        player.update(health = min(1, player.health + p.health))
+                            if coll else None
                     )[0]
                 ],
             ),
 
             spawn_weapon(),
+            spawn_health(),
             spawn_robot(),
 
             # RENDER
@@ -366,7 +393,14 @@
                 pickup.x,
                 pickup.y,
                 WHITE
-            ) for pickup in pickups],
+            ) for pickup in weapon_pickups],
+            [draw_rectangle(
+                pickup.x,
+                pickup.y,
+                pickup.w,
+                pickup.h,
+                GREEN
+            ) for pickup in health_pickups],
             draw_texture_rec(
                 player_texture,
                 (0, 0, 32, 64) if player.dx < 0
