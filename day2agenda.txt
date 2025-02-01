@@ -6,9 +6,5 @@
 
 - pixel art
 	- background
-	- walls
 
 - sound?
-
-- Pause/restart the game
-
