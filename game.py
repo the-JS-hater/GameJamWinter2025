@@ -20,7 +20,8 @@
     window_h := 720,
     healthbar_w := 180,
     healthbar_h := 15,
-    fonst_size := 50,
+    dead_msg_font_size := 50,
+    score_font_size := 15,
 
     # Init Raylib
     
@@ -334,6 +335,7 @@
             ),
 
             # Kill robots with bullets
+            nr_of_robots := len(robots),
             bullet_collision := lambda robot, bullet: (
                 robot.x <= bullet.x <= robot.x + robot.w
                 and robot.y <= bullet.y <= robot.y + robot.h
@@ -342,6 +344,7 @@
                 robots = [r for r in robots if not any(bullet_collision(r, b) for b in bullets)],
                 bullets = [b for b in bullets if not any(bullet_collision(r, b) for r in robots)],
             ),
+            score := score + (nr_of_robots - len(robots)), 
 
             # Pick up weapons and health
             globals().update(
@@ -422,6 +425,20 @@
                 healthbar_h,
                 RED,
             ),
+            draw_text(
+                f"SCORE: {score}", 
+                int(0.1 * window_w), 
+                int(0.02 * window_h),
+                score_font_size,
+                WHITE 
+            ),
+            draw_text(
+                f"AMMO: {player.ammo}", 
+                int(0.3 * window_w), 
+                int(0.02 * window_h),
+                score_font_size,
+                WHITE 
+            ),
             end_drawing(),
 
             # Game over
@@ -433,12 +450,12 @@
             begin_drawing(),
             clear_background(BLACK),
                 end_msg := f"You have the DEAD. You are died :(\nRobots killed {score}",
-            msg_width := measure_text(end_msg, fonst_size),
+            msg_width := measure_text(end_msg, dead_msg_font_size),
             draw_text(
                 end_msg, 
                 int(window_w / 2 - msg_width / 2), 
                 int(window_h / 2),
-                fonst_size,
+                dead_msg_font_size,
                 RED
             ),
             end_drawing(),

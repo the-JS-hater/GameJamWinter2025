@@ -1,7 +1,3 @@
-- score
-
-- health pickups
-
 - more weapons
 	- bullet types?
 	- explosives?
