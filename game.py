@@ -41,7 +41,7 @@
     })),
 
     Player := classdef("Player", ["x", "y", "dx", "dy", "w", "h", "weapon", "ammo", "health", "damage_cooldown", "weapon_cooldown"]),
-    Robot := classdef("Robot", ["x", "y", "w", "h"]),
+    Robot := classdef("Robot", ["x", "y", "dx", "dy", "w", "h"]),
     Bullet := classdef("Bullet", ["x", "y", "dx", "dy"]),
     Wall := classdef("Wall", ["x", "y", "w", "h"]),
     WeaponPickup := classdef("WeaponPickup", ["x", "y", "w", "h", "weapon", "ammo"]),
@@ -179,8 +179,8 @@
         weapon_cooldown = 0,
     ),
 
-    robot1 := Robot(x = 50, y = 50, w = 32, h = 32),
-    robot2 := Robot(x = 150, y = 220, w = 32, h = 32),
+    robot1 := Robot(x = 50, y = 50, w = 32, h = 32, dx = 0, dy = 0),
+    robot2 := Robot(x = 150, y = 220, w = 32, h = 32, dx = 0, dy = 0),
     robots := [robot1, robot2],
     bullets := [],
     pickups := [],
@@ -306,6 +306,8 @@
                     r.copy_with(
                         x = r.x + dx / dist * robot_speed,
                         y = r.y + dy / dist * robot_speed,
+                        dx = dx,
+                        dy = dy,
                     )
                 )[-1] for r in robots],
             ),
