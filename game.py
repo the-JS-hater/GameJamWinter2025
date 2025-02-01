@@ -31,6 +31,7 @@
     Robot := classdef("Robot", ["x", "y", "w", "h"]),
     Bullet := classdef("Bullet", ["x", "y", "dx", "dy"]),
     Wall := classdef("Wall", ["x", "y", "w", "h"]),
+    WeaponPickup := classdef("WeaponPickup", ["x", "y", "w", "h", "weapon"]),
 
     # HELPER FUNCTIONS
     
@@ -130,7 +131,7 @@
         x = 200, y = 180, 
         dx = 0, dy = 1, 
         w = 10, h = 20, 
-        weapon = "shotgun",
+        weapon = "pistol",
         health = 1.0,
         damage_cooldown = 0,
         weapon_cooldown = 0,
@@ -140,7 +141,11 @@
     robot2 := Robot(x = 150, y = 220, w = 10, h = 20),
     robots := [robot1, robot2],
     bullets := [],
-    
+    pickups := [
+        WeaponPickup(x = 500, y = 200, w = 10, h = 10, weapon = "shotgun"),
+        WeaponPickup(x = 200, y = 500, w = 10, h = 10, weapon = "assault_rifle"),
+    ],
+
     set_target_fps(60),
     set_trace_log_level(7), 
     init_window(window_w, window_h, "game"),
@@ -274,6 +279,16 @@
                 bullets = [b for b in bullets if not any(bullet_collision(r, b) for r in robots)],
             ),
 
+            # Pick up weapons
+            globals().update(
+                pickups = [
+                    p for p in pickups if not (
+                        coll := has_collision(player, p),
+                        player.update(weapon = p.weapon) if coll else None
+                    )[0]
+                ],
+            ),
+
             # RENDER
             begin_drawing(),
             clear_background(BLACK),
@@ -299,6 +314,13 @@
                 int(2.0),
                 YELLOW,
             ) for bullet in bullets],
+            [draw_rectangle(
+                int(pickup.x),
+                int(pickup.y),
+                int(pickup.w),
+                int(pickup.h),
+                PINK,
+            ) for pickup in pickups],
             draw_rectangle(
                 int(player.x),
                 int(player.y),
