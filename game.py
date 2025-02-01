@@ -109,7 +109,8 @@
 
     spawn_robot := lambda: (
         robots.append(next(filter(
-            lambda robot: not has_world_collision(robot),
+            lambda robot: not has_world_collision(robot)
+                and hypot(robot.x - player.x, robot.y - player.y) > 300.0,
             (
                 Robot(
                     x = random.randint(0, window_w - 32),
