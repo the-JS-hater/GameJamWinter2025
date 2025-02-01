@@ -12,6 +12,7 @@
     globimport("functools"),
     globimport("math"),
     globimport("heapq"),
+    random := __import__("random"),
 
     # GUI constants
 
@@ -90,6 +91,33 @@
             dy = dy - dx * 0.2,
         ))
     ),
+
+    spawn_weapon := lambda: (
+        pickups.append(next(
+            pickup
+            for pickup in (
+                (lambda weapon: WeaponPickup(
+                    x = random.randint(0, window_w - 32),
+                    y = random.randint(0, window_h - 32),
+                    weapon = weapon,
+                    ammo = weapon_ammos[weapon],
+                    w = 32,
+                    h = 32,
+                ))(random.choice(["shotgun", "assault_rifle"]))
+                for _ in cycle([1])
+            )
+            if not any(
+                has_collision(pickup, Wall(
+                    x = x * grid_scale_w, 
+                    y = y * grid_scale_h, 
+                    w = grid_scale_w, 
+                    h = grid_scale_h))
+                for x in range(len(map[0]))
+                    for y in range(len(map)) 
+                        if map[y][x] != 0
+            ) 
+        ))
+    ) if len(pickups) < 3 else None,
     
     map_dist_to := lambda x, y: (
         dist_to := [[10**10] * grid_size_w for _ in range(grid_size_h)],
@@ -138,6 +166,7 @@
 
     weapons := {"pistol": fire_pistol, "assault_rifle": fire_pistol, "shotgun": fire_shotgun},
     weapon_cooldowns := {"pistol": 60, "shotgun": 90, "assault_rifle": 10},
+    weapon_ammos := {"pistol": float("inf"), "shotgun": 5, "assault_rifle": 30},
     
     player := Player(
         x = 180, y = 120, 
@@ -154,10 +183,8 @@
     robot2 := Robot(x = 150, y = 220, w = 32, h = 32),
     robots := [robot1, robot2],
     bullets := [],
-    pickups := [
-        WeaponPickup(x = 500, y = 200, w = 32, h = 32, weapon = "shotgun", ammo = 5),
-        WeaponPickup(x = 200, y = 500, w = 32, h = 32, weapon = "assault_rifle", ammo = 30),
-    ],
+    pickups := [],
+
 
     reduce(lambda _, a : None, takewhile(
         lambda _ : not window_should_close(),
@@ -302,6 +329,8 @@
                     )[0]
                 ],
             ),
+
+            spawn_weapon(),
 
             # RENDER
             begin_drawing(),
