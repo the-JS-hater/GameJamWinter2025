@@ -36,11 +36,11 @@
         "copy_with": lambda self, **vals: ty(**{ n: vals[n] if n in vals else getattr(self, n) for n in fields }),
     })),
 
-    Player := classdef("Player", ["x", "y", "dx", "dy", "w", "h", "weapon", "health", "damage_cooldown", "weapon_cooldown"]),
+    Player := classdef("Player", ["x", "y", "dx", "dy", "w", "h", "weapon", "ammo", "health", "damage_cooldown", "weapon_cooldown"]),
     Robot := classdef("Robot", ["x", "y", "w", "h"]),
     Bullet := classdef("Bullet", ["x", "y", "dx", "dy"]),
     Wall := classdef("Wall", ["x", "y", "w", "h"]),
-    WeaponPickup := classdef("WeaponPickup", ["x", "y", "w", "h", "weapon"]),
+    WeaponPickup := classdef("WeaponPickup", ["x", "y", "w", "h", "weapon", "ammo"]),
 
     # HELPER FUNCTIONS
     
@@ -141,6 +141,7 @@
         dx = 0, dy = 1, 
         w = 32, h = 32, 
         weapon = "pistol",
+        ammo = float('inf'),
         health = 1.0,
         damage_cooldown = 0,
         weapon_cooldown = 0,
@@ -151,8 +152,8 @@
     robots := [robot1, robot2],
     bullets := [],
     pickups := [
-        WeaponPickup(x = 500, y = 200, w = 10, h = 10, weapon = "shotgun"),
-        WeaponPickup(x = 200, y = 500, w = 10, h = 10, weapon = "assault_rifle"),
+        WeaponPickup(x = 500, y = 200, w = 10, h = 10, weapon = "shotgun", ammo = 5),
+        WeaponPickup(x = 200, y = 500, w = 10, h = 10, weapon = "assault_rifle", ammo = 30),
     ],
 
     reduce(lambda _, a : None, takewhile(
@@ -221,14 +222,18 @@
             # Fire weapon
             (
                 weapons[player.weapon](
-                    player.x,
+                    player.x + player.w / 2,
                     player.y,
                     player.dx,
                     player.dy,
                 ),
                 player.update(
+                    ammo = player.ammo - 1 if player.ammo > 1 else float("inf"),
+                    weapon = player.weapon if player.ammo > 1 else "pistol",
+                ),
+                player.update(
                     weapon_cooldown = weapon_cooldowns[player.weapon]
-                )
+                ),
             )
                 if is_key_down(KeyboardKey.KEY_SPACE) 
                     and player.weapon_cooldown == 0
@@ -290,7 +295,7 @@
                 pickups = [
                     p for p in pickups if not (
                         coll := has_collision(player, p),
-                        player.update(weapon = p.weapon) if coll else None
+                        player.update(weapon = p.weapon, ammo = p.ammo) if coll else None
                     )[0]
                 ],
             ),
