@@ -19,7 +19,8 @@
     window_w := 1080,
     window_h := 720,
     healthbar_w := 180,
-    healthbar_h := 25,
+    healthbar_h := 15,
+    fonst_size := 50,
 
     # Init Raylib
     
@@ -187,6 +188,8 @@
     robot_speed := 1.0,
 
     # Game state
+
+    game_state := "running",
     
     map := [
         list(map(int, l.replace("\n", "")))
@@ -219,6 +222,7 @@
     weapon_pickups := [],
     health_pickups := [],
     robot_cap := 3,
+    score := 0,
 
     reduce(lambda _, a : None, takewhile(
         lambda _ : not window_should_close(),
@@ -413,12 +417,32 @@
             ),
             draw_rectangle(
                 int(0 + window_w * 0.8), 
-                int(0 + window_h * 0.1),
+                int(0 + window_h * 0.02),
                 int(player.health * healthbar_w),
                 healthbar_h,
-                BLUE,
+                RED,
             ),
             end_drawing(),
-        ) for _ in cycle([1]))
+
+            # Game over
+
+            (game_state := "game_over") 
+            if player.health <= 0 else None,
+
+        ) if game_state == "running" else (
+            begin_drawing(),
+            clear_background(BLACK),
+                end_msg := f"You have the DEAD. You are died :(\nRobots killed {score}",
+            msg_width := measure_text(end_msg, fonst_size),
+            draw_text(
+                end_msg, 
+                int(window_w / 2 - msg_width / 2), 
+                int(window_h / 2),
+                fonst_size,
+                RED
+            ),
+            end_drawing(),
+        )
+        for _ in cycle([1]))
     )),
 )
