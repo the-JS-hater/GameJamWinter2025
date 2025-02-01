@@ -1,8 +1,3 @@
-- Game geometry / map
-	- requires: new path finding
-
-- weapon pickups
-
 - score
 
 - health pickups
@@ -14,8 +9,10 @@
 - placable barricades? destructible terrain?
 
 - pixel art
+	- background
+	- walls
 
-- sound
+- sound?
 
 - Pause/restart the game
 
