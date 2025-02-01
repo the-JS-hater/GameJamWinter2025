@@ -19,56 +19,61 @@
     healthbar_w := 180,
     healthbar_h := 25,
 
+    # Classes
+    classdef := lambda name, fields: (ty := type(name, (), {
+        "__init__": lambda self, **vals: [setattr(self, n, vals[n]) for n in fields][0],
+        "update": lambda self, **vals: [setattr(self, n, v) for n, v in vals.items() if n in fields],
+        "copy_with": lambda self, **vals: ty(**{ n: vals[n] if n in vals else getattr(self, n) for n in fields }),
+    })),
+
+    Player := classdef("Player", ["x", "y", "dx", "dy", "w", "h", "weapon", "health", "damage_cooldown", "weapon_cooldown"]),
+    Robot := classdef("Robot", ["x", "y", "w", "h"]),
+    Bullet := classdef("Bullet", ["x", "y", "dx", "dy"]),
+
     # HELPER FUNCTIONS
     
     has_collision := lambda a, b: not any([
-        a['x'] + a['w'] <= b['x'],
-        b['x'] + b['w'] <= a['x'],
-        a['y'] + a['h'] <= b['y'],
-        b['y'] + b['h'] <= a['y'],
+        a.x + a.w <= b.x,
+        b.x + b.w <= a.x,
+        a.y + a.h <= b.y,
+        b.y + b.h <= a.y,
     ]),
 
     update_cooldowns := lambda player: (
         player.update(
-            weapon_cooldown = max(0, player["weapon_cooldown"] - 1),
-            damage_cooldown = max(0, player["damage_cooldown"] - 1),
+            weapon_cooldown = max(0, player.weapon_cooldown - 1),
+            damage_cooldown = max(0, player.damage_cooldown - 1),
         )
     ),
 
     fire_pistol := lambda x, y, dx, dy : (
-        bullets.append({
-            "x": x,
-            "y": y,
-            "dx": dx,
-            "dy": dy,
-        })
+        bullets.append(Bullet(
+            x = x,
+            y = y,
+            dx = dx,
+            dy = dy,
+        ))
     ),
 
     fire_shotgun := lambda x, y, dx, dy : (
-        bullets.append(
-            {
-                "x": x,
-                "y": y,
-                "dx": dx,
-                "dy": dy,
-            }
-        ),
-        bullets.append(
-            {
-                "x": x,
-                "y": y,
-                "dx": dx - dy * 0.2,
-                "dy": dy + dx * 0.2,
-            }
-        ),
-        bullets.append(
-            {
-                "x": x,
-                "y": y,
-                "dx": dx + dy * 0.2,
-                "dy": dy - dx * 0.2,
-            }
-        )
+        bullets.append(Bullet(
+            x = x,
+            y = y,
+            dx = dx,
+            dy = dy,
+        )),
+        bullets.append(Bullet(
+            x = x,
+            y = y,
+            dx = dx - dy * 0.2,
+            dy = dy + dx * 0.2,
+        )),
+        bullets.append(Bullet(
+            x = x,
+            y = y,
+            dx = dx + dy * 0.2,
+            dy = dy - dx * 0.2,
+        ))
     ),
     
 
@@ -91,18 +96,18 @@
     weapons := {"pistol": fire_pistol, "assault_rifle": fire_pistol, "shotgun": fire_shotgun},
     weapon_cooldowns := {"pistol": 60, "shotgun": 90, "assault_rifle": 10},
 
-    player := {
-        "x": 200, "y": 180, 
-        "dx": 0, "dy": 1, 
-        "w": 10, "h": 20, 
-        "weapon": "shotgun",
-        "health": 1.0,
-        "damage_cooldown": 0,
-        "weapon_cooldown": 0,
-    },
+    player := Player(
+        x = 200, y = 180, 
+        dx = 0, dy = 1, 
+        w = 10, h = 20, 
+        weapon = "shotgun",
+        health = 1.0,
+        damage_cooldown = 0,
+        weapon_cooldown = 0,
+    ),
 
-    robot1 := {"x": 50, "y": 50, "w": 10, "h": 20},
-    robot2 := {"x": 150, "y": 220, "w": 10, "h": 20},
+    robot1 := Robot(x = 50, y = 50, w = 10, h = 20),
+    robot2 := Robot(x = 150, y = 220, w = 10, h = 20),
     robots := [robot1, robot2],
     bullets := [],
     
@@ -112,30 +117,31 @@
     reduce(lambda _, a : None, takewhile(
         lambda _ : not window_should_close(),
         ((
-            moved_player := player.copy(),
-
             # INPUT 
             # & UPDATE
             
-            moved_player.__setitem__("y", player["y"] - 1)
-                if is_key_down(KeyboardKey.KEY_UP) else None,
+            moved_player := player.copy_with(
+                x = player.x
+                    - (1 if is_key_down(KeyboardKey.KEY_LEFT) else 0)
+                    + (1 if is_key_down(KeyboardKey.KEY_RIGHT) else 0),
+                y = player.y
+                    - (1 if is_key_down(KeyboardKey.KEY_UP) else 0)
+                    + (1 if is_key_down(KeyboardKey.KEY_DOWN) else 0),
+            ),
 
-            moved_player.__setitem__("y", player["y"] + 1)
-                if is_key_down(KeyboardKey.KEY_DOWN) else None,
-            
-            moved_player.__setitem__("x", player["x"] - 1)
-                if is_key_down(KeyboardKey.KEY_LEFT) else None,
-            
-            moved_player.__setitem__("x", player["x"] + 1)
-                if is_key_down(KeyboardKey.KEY_RIGHT) else None,
-            
-            moved_player.__setitem__("dx", moved_player["x"] - player["x"]),
-            moved_player.__setitem__("dy", moved_player["y"] - player["y"]),
-            
+            moved_player.update(
+                dx = moved_player.x - player.x,
+                dy = moved_player.y - player.y,
+            ),
 
             # Move player
-            player.update(moved_player) if 
-                (moved_player["dx"] != 0 or moved_player["dy"] != 0) else None,
+            player.update(
+                x = moved_player.x,
+                y = moved_player.y,
+                dx = moved_player.dx,
+                dy = moved_player.dy,
+            )
+                if (moved_player.dx != 0 or moved_player.dy != 0) else None,
             
             #    and
             #    not any(
@@ -151,10 +157,10 @@
             
             # Player collides with robot
             player.update(
-                health = player['health'] - 0.2,
+                health = player.health - 0.2,
                 damage_cooldown = 120,
             ) if
-                player["damage_cooldown"] == 0
+                player.damage_cooldown == 0
                 and any(
                     has_collision(player, robot) 
                 for robot in robots) else None,
@@ -162,49 +168,47 @@
 
             # Fire weapon
             (
-                weapons[player["weapon"]](
-                    player['x'],
-                    player['y'],
-                    player['dx'],
-                    player['dy'],
+                weapons[player.weapon](
+                    player.x,
+                    player.y,
+                    player.dx,
+                    player.dy,
                 ),
                 player.update(
-                    weapon_cooldown = weapon_cooldowns[player["weapon"]]
+                    weapon_cooldown = weapon_cooldowns[player.weapon]
                 )
             )
                 if is_key_down(KeyboardKey.KEY_SPACE) 
-                    and player["weapon_cooldown"] == 0
+                    and player.weapon_cooldown == 0
                 else None,
     
             # Update bullets
             globals().update(bullets = [
-                {
-                    **b,
-                    'x': b['x'] + bullet_speed * b['dx'],
-                    'y': b['y'] + bullet_speed * b['dy'],
-                }
+                b.copy_with(
+                    x = b.x + bullet_speed * b.dx,
+                    y = b.y + bullet_speed * b.dy,
+                )
                 for b in bullets
-                if 0 <= b['x'] <= window_w and 0 <= b['y'] <= window_h
+                if 0 <= b.x <= window_w and 0 <= b.y <= window_h
             ]),
 
             # Update robots
             globals().update(
                 robots = [(
-                    dx := player["x"] - r["x"],
-                    dy := player["y"] - r["y"],
+                    dx := player.x - r.x,
+                    dy := player.y - r.y,
                     dist := hypot(dx, dy),
-                    {
-                        **r,
-                        "x": r["x"] + dx / dist * robot_speed,
-                        "y": r["y"] + dy / dist * robot_speed,
-                    }
+                    r.copy_with(
+                        x = r.x + dx / dist * robot_speed,
+                        y = r.y + dy / dist * robot_speed,
+                    )
                 )[-1] for r in robots],
             ),
 
             # Kill robots with bullets
             bullet_collision := lambda robot, bullet: (
-                robot["x"] <= bullet["x"] <= robot["x"] + robot["w"]
-                and robot["y"] <= bullet["y"] <= robot["y"] + robot["h"]
+                robot.x <= bullet.x <= robot.x + robot.w
+                and robot.y <= bullet.y <= robot.y + robot.h
             ),
             globals().update(
                 robots = [r for r in robots if not any(bullet_collision(r, b) for b in bullets)],
@@ -224,29 +228,29 @@
             if map[y][x]] 
              for y in range(grid_size_h)],
             [draw_rectangle(
-                int(entity["x"]),
-                int(entity["y"]),
-                int(entity["w"]),
-                int(entity["h"]),
+                int(entity.x),
+                int(entity.y),
+                int(entity.w),
+                int(entity.h),
                 GREEN,
             ) for entity in robots],
             [draw_circle(
-                int(bullet['x']),
-                int(bullet['y']),
+                int(bullet.x),
+                int(bullet.y),
                 int(2.0),
                 YELLOW,
             ) for bullet in bullets],
             draw_rectangle(
-                int(player["x"]),
-                int(player["y"]),
-                int(player["w"]),
-                int(player["h"]),
+                int(player.x),
+                int(player.y),
+                int(player.w),
+                int(player.h),
                 RED,
             ),
             draw_rectangle(
                 int(0 + window_w * 0.8), 
                 int(0 + window_h * 0.1),
-                int(player["health"] * healthbar_w),
+                int(player.health * healthbar_w),
                 healthbar_h,
                 BLUE,
             ),
