@@ -55,6 +55,17 @@
         b.y + b.h <= a.y,
     ]),
 
+    has_world_collision := lambda obj: any(
+        has_collision(obj, Wall(
+            x = x * grid_scale_w, 
+            y = y * grid_scale_h, 
+            w = grid_scale_w, 
+            h = grid_scale_h))
+        for x in range(len(map[0]))
+            for y in range(len(map)) 
+                if map[y][x] != 0
+    ),
+
     update_cooldowns := lambda player: (
         player.update(
             weapon_cooldown = max(0, player.weapon_cooldown - 1),
@@ -92,10 +103,26 @@
         ))
     ),
 
+    spawn_robot := lambda: (
+        robots.append(next(filter(
+            lambda robot: not has_world_collision(robot),
+            (
+                Robot(
+                    x = random.randint(0, window_w - 32),
+                    y = random.randint(0, window_h - 32),
+                    w = 32,
+                    h = 32,
+                    dx = 0,
+                    dy = 0,
+                ) for _ in cycle([1])
+            ),
+        )))
+    ) if len(robots) < 5 else None,
+
     spawn_weapon := lambda: (
-        pickups.append(next(
-            pickup
-            for pickup in (
+        pickups.append(next(filter(
+            lambda pickup: not has_world_collision(pickup),
+            (
                 (lambda weapon: WeaponPickup(
                     x = random.randint(0, window_w - 32),
                     y = random.randint(0, window_h - 32),
@@ -105,18 +132,8 @@
                     h = 32,
                 ))(random.choice(["shotgun", "assault_rifle"]))
                 for _ in cycle([1])
-            )
-            if not any(
-                has_collision(pickup, Wall(
-                    x = x * grid_scale_w, 
-                    y = y * grid_scale_h, 
-                    w = grid_scale_w, 
-                    h = grid_scale_h))
-                for x in range(len(map[0]))
-                    for y in range(len(map)) 
-                        if map[y][x] != 0
-            ) 
-        ))
+            ),
+        )))
     ) if len(pickups) < 3 else None,
     
     map_dist_to := lambda x, y: (
@@ -179,9 +196,7 @@
         weapon_cooldown = 0,
     ),
 
-    robot1 := Robot(x = 50, y = 50, w = 32, h = 32, dx = 0, dy = 0),
-    robot2 := Robot(x = 150, y = 220, w = 32, h = 32, dx = 0, dy = 0),
-    robots := [robot1, robot2],
+    robots := [],
     bullets := [],
     pickups := [],
 
@@ -214,16 +229,7 @@
                 dy = moved_player.dy,
             )
                 if (moved_player.dx != 0 or moved_player.dy != 0)
-                and not any(
-                has_collision(moved_player, Wall(
-                    x = x * grid_scale_w, 
-                    y = y * grid_scale_h, 
-                    w = grid_scale_w, 
-                    h = grid_scale_h))
-                for x in range(len(map[0]))
-                    for y in range(len(map)) 
-                        if map[y][x] != 0
-            ) 
+                and not has_world_collision(moved_player)
             else None,
             
             #    and
@@ -333,6 +339,7 @@
             ),
 
             spawn_weapon(),
+            spawn_robot(),
 
             # RENDER
             begin_drawing(),
