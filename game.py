@@ -35,6 +35,8 @@
     pistol_texture := load_texture("resources/Pistol.png"),
     shotgun_texture := load_texture("resources/Shotgun.png"),
     assault_rifle_texture := load_texture("resources/MachineGun.png"),
+    spam_texture := load_texture("resources/Spam.png"),
+    wall_texture := load_texture("resources/StoneWall.png"),
 
     # Classes
     classdef := lambda name, fields: (ty := type(name, (), {
@@ -374,15 +376,14 @@
             # RENDER
             begin_drawing(),
             clear_background(BLACK),
-            [[draw_rectangle(
+            [[draw_texture(
+                wall_texture,
                 int(x * grid_scale_w),
                 int(y * grid_scale_h),
-                int(grid_scale_w + 1),
-                int(grid_scale_h + 1),
-                BROWN,
+                WHITE,
             ) for x in range(grid_size_w)
-            if map[y][x]] 
-             for y in range(grid_size_h)],
+                if map[y][x]] 
+                for y in range(grid_size_h)],
             [draw_texture_rec(
                 robot_texture,
                 (64, 0, 32, 64) if robot.dx < -abs(robot.dy)
@@ -405,12 +406,11 @@
                 pickup.y,
                 WHITE
             ) for pickup in weapon_pickups],
-            [draw_rectangle(
+            [draw_texture(
+                spam_texture,
                 pickup.x,
                 pickup.y,
-                pickup.w,
-                pickup.h,
-                GREEN
+                WHITE
             ) for pickup in health_pickups],
             draw_texture_rec(
                 player_texture,
