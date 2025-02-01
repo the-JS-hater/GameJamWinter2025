@@ -191,6 +191,7 @@
     bullet_speed := 8,
     robot_speed := 1.1,
     player_speed := 2.1,
+    damage_cooldown_rate := 60,
 
     # Game state
 
@@ -268,7 +269,7 @@
             # Player collides with robot
             player.update(
                 health = player.health - 0.2,
-                damage_cooldown = 120,
+                damage_cooldown = damage_cooldown_rate,
             ) if
                 player.damage_cooldown == 0
                 and any(
