@@ -186,7 +186,8 @@
     # Game constants
 
     bullet_speed := 8,
-    robot_speed := 1.0,
+    robot_speed := 1.1,
+    player_speed := 2.1,
 
     # Game state
 
@@ -228,17 +229,17 @@
     reduce(lambda _, a : None, takewhile(
         lambda _ : not window_should_close(),
         ((
+            # INPUT & UPDATE
+            
             globals().update(robot_cap = robot_cap + 1 / 60 / 10),
-            # INPUT 
-            # & UPDATE
             
             moved_player := player.copy_with(
                 x = player.x
-                    - (2 if is_key_down(KeyboardKey.KEY_LEFT) else 0)
-                    + (2 if is_key_down(KeyboardKey.KEY_RIGHT) else 0),
+                    - (player_speed if is_key_down(KeyboardKey.KEY_LEFT) else 0)
+                    + (player_speed if is_key_down(KeyboardKey.KEY_RIGHT) else 0),
                 y = player.y
-                    - (2 if is_key_down(KeyboardKey.KEY_UP) else 0)
-                    + (2 if is_key_down(KeyboardKey.KEY_DOWN) else 0),
+                    - (player_speed if is_key_down(KeyboardKey.KEY_UP) else 0)
+                    + (player_speed if is_key_down(KeyboardKey.KEY_DOWN) else 0),
             ),
 
             moved_player.update(
@@ -247,6 +248,7 @@
             ),
 
             # Move player
+
             player.update(
                 x = moved_player.x,
                 y = moved_player.y,
@@ -416,7 +418,8 @@
                 else (32, 0, 32, 64) if player.dy < 0
                 else (64, 0, 32, 64),
                 (player.x, player.y - 32),
-                WHITE
+                WHITE if player.damage_cooldown == 0
+                else RED
             ),
             draw_rectangle(
                 int(0 + window_w * 0.8), 
