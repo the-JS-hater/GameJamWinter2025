@@ -98,14 +98,14 @@
         bullets.append(Bullet(
             x = x,
             y = y,
-            dx = dx - dy * 0.2,
-            dy = dy + dx * 0.2,
+            dx = dx * 0.9 - dy * 0.1,
+            dy = dy * 0.9 + dx * 0.1,
         )),
         bullets.append(Bullet(
             x = x,
             y = y,
-            dx = dx + dy * 0.2,
-            dy = dy - dx * 0.2,
+            dx = dx * 0.9 + dy * 0.1,
+            dy = dy * 0.9 - dx * 0.1,
         ))
     ),
 
@@ -188,9 +188,9 @@
 
     # Game constants
 
-    bullet_speed := 8,
-    robot_speed := 1.1,
-    player_speed := 2.1,
+    bullet_speed := 12,
+    robot_speed := 1.8,
+    player_speed := 2.8,
     damage_cooldown_rate := 60,
 
     # Game state
@@ -209,8 +209,8 @@
     grid_scale_h := window_h / grid_size_h,
 
     weapons := {"pistol": fire_pistol, "assault_rifle": fire_pistol, "shotgun": fire_shotgun},
-    weapon_cooldowns := {"pistol": 60, "shotgun": 90, "assault_rifle": 10},
-    weapon_ammos := {"pistol": float("inf"), "shotgun": 5, "assault_rifle": 30},
+    weapon_cooldowns := {"pistol": 60, "shotgun": 50, "assault_rifle": 10},
+    weapon_ammos := {"pistol": float("inf"), "shotgun": 8, "assault_rifle": 30},
     
     player := Player(
         x = 960, y = 540, 
@@ -229,13 +229,35 @@
     health_pickups := [],
     robot_cap := 3,
     score := 0,
+    
+    # Reset Game state
+    reset_game := lambda : globals().update( 
+        game_state = "running",
+        player = Player(
+            x = 960, y = 540, 
+            dx = 0, dy = 1, 
+            w = 32, h = 32, 
+            weapon = "pistol",
+            ammo = float('inf'),
+            health = 1.0,
+            damage_cooldown = 0,
+            weapon_cooldown = 0,
+        ),
+
+        robots = [],
+        bullets = [],
+        weapon_pickups = [],
+        health_pickups = [],
+        robot_cap = 3,
+        score = 0,
+    ),
 
     reduce(lambda _, a : None, takewhile(
         lambda _ : not window_should_close(),
         ((
             # INPUT & UPDATE
             
-            globals().update(robot_cap = robot_cap + 1 / 60 / 10),
+            globals().update(robot_cap = robot_cap + 1 / 60 / 5),
             
             moved_player := player.copy_with(
                 x = player.x
@@ -452,9 +474,12 @@
             if player.health <= 0 else None,
 
         ) if game_state == "running" else (
+            (reset_game()) 
+            if is_key_down(KeyboardKey.KEY_R) 
+            else None,
             begin_drawing(),
             clear_background(BLACK),
-                end_msg := f"You have the DEAD. You are died :(\nRobots killed {score}",
+                end_msg := f"You have the DEAD. You are died :(\nRobots killed {score}\nPress R to die again :D",
             msg_width := measure_text(end_msg, dead_msg_font_size),
             draw_text(
                 end_msg, 
