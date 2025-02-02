@@ -276,32 +276,28 @@
             # INPUT & UPDATE
             update_music_stream(le_music),
             globals().update(robot_cap = robot_cap + 1 / 60 / 4),
+
+            # Move player
+            player_before := player.copy_with(),
             
-            moved_player := player.copy_with(
+            player.update(
                 x = player.x
                     - (player_speed if is_key_down(KeyboardKey.KEY_LEFT) else 0)
                     + (player_speed if is_key_down(KeyboardKey.KEY_RIGHT) else 0),
+            ),
+            player.update(x = player_before.x if has_world_collision(player) else player.x),
+
+            player.update(
                 y = player.y
                     - (player_speed if is_key_down(KeyboardKey.KEY_UP) else 0)
                     + (player_speed if is_key_down(KeyboardKey.KEY_DOWN) else 0),
             ),
-
-            moved_player.update(
-                dx = moved_player.x - player.x,
-                dy = moved_player.y - player.y,
-            ),
-
-            # Move player
+            player.update(y = player_before.y if has_world_collision(player) else player.y),
 
             player.update(
-                x = moved_player.x,
-                y = moved_player.y,
-                dx = moved_player.dx,
-                dy = moved_player.dy,
-            )
-                if (moved_player.dx != 0 or moved_player.dy != 0)
-                and not has_world_collision(moved_player)
-            else None,
+                dx = player.x - player_before.x,
+                dy = player.y - player_before.y,
+            ) if player.x != player_before.x or player.y != player_before.y else None,
             
             # Update cooldowns
             update_cooldowns(player),
