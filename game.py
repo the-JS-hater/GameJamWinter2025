@@ -386,8 +386,8 @@
                 if 0 <= b.x <= window_w and 0 <= b.y <= window_h
             ]),
             bullet_world_coll := lambda b: (
-                tx := int(b.x / grid_scale_h),
-                ty := int(b.y / grid_scale_w),
+                tx := int(b.x / grid_scale_w),
+                ty := int(b.y / grid_scale_h),
                 0 <= tx < grid_size_w and 0 <= ty < grid_size_h and map[ty][tx] != 0
             )[-1],
             globals().update(bullets = [
@@ -404,11 +404,11 @@
                 if 0 <= m.x <= window_w and 0 <= m.y <= window_h
             ]),
             missile_coll := lambda m: (
-                tx := int(m.x / grid_scale_h),
-                ty := int(m.y / grid_scale_w),
+                tx := int(m.x / grid_scale_w),
+                ty := int(m.y / grid_scale_h),
                 0 <= tx < grid_size_w and 0 <= ty < grid_size_h and map[ty][tx] != 0
             )[-1] or any(
-                r.x <= m.x < r.x + r.w and r.y <= m.y < r.x + r.w
+                r.x <= m.x < r.x + r.w and r.y <= m.y < r.y + r.h
                 for r in robots
             ),
             globals().update(missiles = [
