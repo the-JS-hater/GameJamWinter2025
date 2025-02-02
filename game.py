@@ -23,7 +23,7 @@
     dead_msg_font_size := 50,
     score_font_size := 20,
     lore_font_size := 50,
-    music_volume := 0.8,
+    music_volume := 0.7,
 
     # Init Raylib
     
@@ -414,7 +414,7 @@
             globals().update(missiles = [
                 m for m in missiles if not (
                     coll := missile_coll(m),
-                    grenades.append(Grenade(x = m.x, y = m.y, fuse = explosion_time)) if coll else None,
+                    grenades.append(Grenade(x = m.x, y = m.y, fuse = explosion_time + 1)) if coll else None,
                 )[0]
             ]),
 
@@ -429,7 +429,7 @@
                     hypot(r.x - g.x, r.y - g.y) < explosion_size
                     for g in grenades if g.fuse < explosion_time
                 )
-            ])
+            ]),
 
             # Update robots
             ptx := int((player.x + player.w / 2) / grid_scale_w),
