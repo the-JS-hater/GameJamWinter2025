@@ -21,7 +21,7 @@
     healthbar_w := 180,
     healthbar_h := 15,
     dead_msg_font_size := 50,
-    score_font_size := 15,
+    score_font_size := 20,
     lore_font_size := 50,
     music_volume := 0.8,
 
@@ -563,14 +563,21 @@
             draw_text(
                 f"SCORE: {score}", 
                 int(0.1 * window_w), 
-                int(0.02 * window_h),
+                int(0.018 * window_h),
                 score_font_size,
                 WHITE 
             ),
             draw_text(
                 f"AMMO: {player.ammo}", 
-                int(0.3 * window_w), 
-                int(0.02 * window_h),
+                int(0.18 * window_w), 
+                int(0.018 * window_h),
+                score_font_size,
+                WHITE 
+            ),
+            draw_text(
+                f"GRENADES: {player.grenades}", 
+                int(0.25 * window_w), 
+                int(0.018 * window_h),
                 score_font_size,
                 WHITE 
             ),
