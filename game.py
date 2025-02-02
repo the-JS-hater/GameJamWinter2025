@@ -211,6 +211,8 @@
     robot_speed := 1.8,
     player_speed := 2.8,
     damage_cooldown_rate := 60,
+    grenade_fuse := 60,
+    explosion_time := 10,
 
     # Game state
 
@@ -350,7 +352,7 @@
                 grenades.append(Grenade(
                     x = player.x,
                     y = player.y,
-                    fuse = 60,
+                    fuse = grenade_fuse + explosion_time,
                 )),
                 player.update(grenades = player.grenades - 1),
             )
@@ -494,11 +496,19 @@
                 YELLOW,
             ) for bullet in bullets],
             # Draw Grenades
-            [draw_texture(
-                grenade_texture,
-                int(grenade.x),
-                int(grenade.y),
-                WHITE 
+            [(
+                draw_texture(
+                    grenade_texture,
+                    int(grenade.x),
+                    int(grenade.y),
+                    WHITE 
+                ),
+                draw_circle(
+                    int(grenade.x + 16),
+                    int(grenade.y + 16),
+                    120,
+                    ORANGE,
+                ) if grenade.fuse < explosion_time else None,
             ) for grenade in grenades],
             # Draw Pickups
             [(draw_circle(
