@@ -88,26 +88,15 @@
         ))
     ),
 
-    fire_shotgun := lambda x, y, dx, dy : (
+    fire_shotgun := lambda x, y, dx, dy : [
         bullets.append(Bullet(
             x = x,
             y = y,
-            dx = dx,
-            dy = dy,
-        )),
-        bullets.append(Bullet(
-            x = x,
-            y = y,
-            dx = dx * 0.9 - dy * 0.1,
-            dy = dy * 0.9 + dx * 0.1,
-        )),
-        bullets.append(Bullet(
-            x = x,
-            y = y,
-            dx = dx * 0.9 + dy * 0.1,
-            dy = dy * 0.9 - dx * 0.1,
+            dx = dx + random.gauss() * shotgun_spread,
+            dy = dy + random.gauss() * shotgun_spread,
         ))
-    ),
+        for _ in range(shotgun_bullets)
+    ],
 
     spawn_robot := lambda: (
         robots.append(next(filter(
@@ -188,7 +177,7 @@
 
     # Game constants
 
-    bullet_speed := 12,
+    bullet_speed := 20,
     robot_speed := 1.8,
     player_speed := 2.8,
     damage_cooldown_rate := 60,
@@ -212,6 +201,9 @@
     weapon_cooldowns := {"pistol": 60, "shotgun": 50, "assault_rifle": 10},
     weapon_ammos := {"pistol": float("inf"), "shotgun": 8, "assault_rifle": 30},
     
+    shotgun_bullets := 6,
+    shotgun_spread := 0.25,
+
     player := Player(
         x = 960, y = 540, 
         dx = 0, dy = 1, 
@@ -304,8 +296,8 @@
                 weapons[player.weapon](
                     player.x + player.w / 2,
                     player.y + player.h / 4,
-                    player.dx,
-                    player.dy,
+                    player.dx / hypot(player.dx, player.dy),
+                    player.dy / hypot(player.dx, player.dy),
                 ),
                 player.update(
                     ammo = player.ammo - 1 if player.ammo > 1 else float("inf"),
@@ -327,6 +319,14 @@
                 )
                 for b in bullets
                 if 0 <= b.x <= window_w and 0 <= b.y <= window_h
+            ]),
+            bullet_world_coll := lambda b: (
+                tx := int(b.x / grid_scale_h),
+                ty := int(b.y / grid_scale_w),
+                0 <= tx < grid_size_w and 0 <= ty < grid_size_h and map[ty][tx] != 0
+            )[-1],
+            globals().update(bullets = [
+                b for b in bullets if not bullet_world_coll(b)
             ]),
 
             # Update robots
@@ -368,9 +368,14 @@
                 robot.x <= bullet.x <= robot.x + robot.w
                 and robot.y <= bullet.y <= robot.y + robot.h
             ),
+            used_bullets := set(),
             globals().update(
-                robots = [r for r in robots if not any(bullet_collision(r, b) for b in bullets)],
-                bullets = [b for b in bullets if not any(bullet_collision(r, b) for r in robots)],
+                robots = [
+                    r for r in robots if not any((
+                        coll := bullet_collision(r, b),
+                        coll and used_bullets.add(b),
+                    )[0] for b in bullets)],
+                bullets = [b for b in bullets if b not in used_bullets],
             ),
             score := score + (nr_of_robots - len(robots)), 
 
