@@ -73,9 +73,10 @@
         "copy_with": lambda self, **vals: ty(**{ n: vals[n] if n in vals else getattr(self, n) for n in fields }),
     })),
 
-    Player := classdef("Player", ["x", "y", "dx", "dy", "w", "h", "weapon", "ammo", "health", "damage_cooldown", "weapon_cooldown"]),
+    Player := classdef("Player", ["x", "y", "dx", "dy", "w", "h", "weapon", "grenades", "ammo", "health", "damage_cooldown", "weapon_cooldown"]),
     Robot := classdef("Robot", ["x", "y", "dx", "dy", "w", "h"]),
     Bullet := classdef("Bullet", ["x", "y", "dx", "dy"]),
+    Grenade := classdef("Grenade", ["x", "y", "fuse"]),
     Wall := classdef("Wall", ["x", "y", "w", "h"]),
     WeaponPickup := classdef("WeaponPickup", ["x", "y", "w", "h", "weapon", "ammo"]),
     HealthPickup := classdef("HealthPickup", ["x", "y", "w", "h", "health"]),
@@ -154,11 +155,11 @@
                     ammo = weapon_ammos[weapon],
                     w = 32,
                     h = 32,
-                ))(random.choice(["shotgun", "assault_rifle"]))
+                ))(random.choice(["shotgun", "assault_rifle", "grenade"]))
                 for _ in cycle([1])
             ),
         )))
-    ) if len(weapon_pickups) < 3 else None,
+    ) if len(weapon_pickups) < 4 else None,
 
     spawn_health := lambda: (
         health_pickups.append(next(filter(
@@ -228,7 +229,7 @@
 
     weapons := {"pistol": fire_pistol, "assault_rifle": fire_pistol, "shotgun": fire_shotgun},
     weapon_cooldowns := {"pistol": 45, "shotgun": 45, "assault_rifle": 10, "rocket_launcher": 60},
-    weapon_ammos := {"pistol": float("inf"), "shotgun": 12, "assault_rifle": 40, "rocket_launcher": 3},
+    weapon_ammos := {"pistol": float("inf"), "shotgun": 12, "assault_rifle": 40, "rocket_launcher": 3, "grenade": 1},
     
     shotgun_bullets := 6,
     shotgun_spread := 0.15,
@@ -239,6 +240,7 @@
         w = 32, h = 32, 
         weapon = "pistol",
         ammo = float('inf'),
+        grenades = 0,
         health = 1.0,
         damage_cooldown = 0,
         weapon_cooldown = 0,
@@ -246,6 +248,7 @@
 
     robots := [],
     bullets := [],
+    grenades := [],
     weapon_pickups := [],
     health_pickups := [],
     robot_cap := 3,
@@ -260,6 +263,7 @@
             w = 32, h = 32, 
             weapon = "pistol",
             ammo = float('inf'),
+            grenades = 0,
             health = 1.0,
             damage_cooldown = 0,
             weapon_cooldown = 0,
@@ -267,6 +271,7 @@
 
         robots = [],
         bullets = [],
+        grenades = [],
         weapon_pickups = [],
         health_pickups = [],
         robot_cap = 3,
@@ -339,6 +344,19 @@
                 if is_key_down(KeyboardKey.KEY_SPACE) 
                     and player.weapon_cooldown == 0
                 else None,
+            
+            # Drop grenade
+            (
+                grenades.append(Grenade(
+                    x = player.x,
+                    y = player.y,
+                    fuse = 60,
+                )),
+                player.update(grenades = player.grenades - 1),
+            )
+                if is_key_pressed(KeyboardKey.KEY_RIGHT_SHIFT)
+                    and player.grenades > 0
+                else None,
     
             # Update bullets
             globals().update(bullets = [
@@ -356,6 +374,19 @@
             )[-1],
             globals().update(bullets = [
                 b for b in bullets if not bullet_world_coll(b)
+            ]),
+
+            # Update grenades
+            globals().update(grenades = [
+                g.copy_with(fuse = g.fuse - 1)
+                for g in grenades
+                if not (
+                    exploded := g.fuse <= 0,
+                    globals().update(
+                        robots = [r for r in robots if hypot(r.x - g.x, r.y - g.y) > 160],
+                    )
+                        if exploded else None,
+                )[0]
             ]),
 
             # Update robots
@@ -413,8 +444,11 @@
                 weapon_pickups = [
                     p for p in weapon_pickups if not (
                         coll := has_collision(player, p),
-                        player.update(weapon = p.weapon, ammo = p.ammo)
-                            if coll else None
+                        (
+                            player.update(grenades = player.grenades + 1)
+                            if p.weapon == "grenade" else
+                            player.update(weapon = p.weapon, ammo = p.ammo)
+                        ) if coll else None
                     )[0]
                 ],
                 health_pickups = [
@@ -459,6 +493,13 @@
                 int(2.0),
                 YELLOW,
             ) for bullet in bullets],
+            # Draw Grenades
+            [draw_texture(
+                grenade_texture,
+                int(grenade.x),
+                int(grenade.y),
+                WHITE 
+            ) for grenade in grenades],
             # Draw Pickups
             [(draw_circle(
                 pickup.x + 16,
