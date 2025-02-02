@@ -211,8 +211,9 @@
     robot_speed := 1.8,
     player_speed := 2.8,
     damage_cooldown_rate := 60,
-    grenade_fuse := 60,
+    grenade_fuse := 90,
     explosion_time := 10,
+    explosion_size := 200,
 
     # Game state
 
@@ -385,7 +386,7 @@
                 if not (
                     exploded := g.fuse <= 0,
                     globals().update(
-                        robots = [r for r in robots if hypot(r.x - g.x, r.y - g.y) > 160],
+                        robots = [r for r in robots if hypot(r.x - g.x, r.y - g.y) > explosion_size],
                     )
                         if exploded else None,
                 )[0]
