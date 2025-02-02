@@ -22,6 +22,7 @@
     healthbar_h := 15,
     dead_msg_font_size := 50,
     score_font_size := 15,
+    lore_font_size := 50,
 
     # Init Raylib
     
@@ -36,7 +37,18 @@
     shotgun_texture := load_texture("resources/Shotgun.png"),
     assault_rifle_texture := load_texture("resources/MachineGun.png"),
     spam_texture := load_texture("resources/Spam.png"),
-    wall_texture := load_texture("resources/StoneWall.png"),
+    wall_texture := load_texture("resources/SimpleWood.png"),
+    floor_texture := load_texture("resources/StoneWall.png"),
+    duck_head_texture := load_texture("resources/DuckHead.png"),
+    duck_body_texture := load_texture("resources/DuckBody.png"),
+        
+    # Resizing the corpse textures
+    duck_head_image := load_image_from_texture(duck_head_texture),
+    duck_body_image := load_image_from_texture(duck_body_texture),
+    image_resize_nn(duck_head_image, 32 * 5, 32 * 5),
+    image_resize_nn(duck_body_image, 64 * 5, 32 * 5),
+    duck_head_texture := load_texture_from_image(duck_head_image),
+    duck_body_texture := load_texture_from_image(duck_body_image),
 
     # Classes
     classdef := lambda name, fields: (ty := type(name, (), {
@@ -139,7 +151,7 @@
                 HealthPickup(
                     x = random.randint(0, window_w - 32),
                     y = random.randint(0, window_h - 32),
-                    health = 0.2,
+                    health = 0.4,
                     w = 32,
                     h = 32,
                 )
@@ -184,7 +196,7 @@
 
     # Game state
 
-    game_state := "running",
+    game_state := "start_screen",
     
     map := [
         list(map(int, l.replace("\n", "")))
@@ -198,8 +210,8 @@
     grid_scale_h := window_h / grid_size_h,
 
     weapons := {"pistol": fire_pistol, "assault_rifle": fire_pistol, "shotgun": fire_shotgun},
-    weapon_cooldowns := {"pistol": 60, "shotgun": 50, "assault_rifle": 10},
-    weapon_ammos := {"pistol": float("inf"), "shotgun": 8, "assault_rifle": 30},
+    weapon_cooldowns := {"pistol": 45, "shotgun": 45, "assault_rifle": 10},
+    weapon_ammos := {"pistol": float("inf"), "shotgun": 12, "assault_rifle": 40},
     
     shotgun_bullets := 6,
     shotgun_spread := 0.25,
@@ -249,7 +261,7 @@
         ((
             # INPUT & UPDATE
             
-            globals().update(robot_cap = robot_cap + 1 / 60 / 5),
+            globals().update(robot_cap = robot_cap + 1 / 60 / 4),
             
             moved_player := player.copy_with(
                 x = player.x
@@ -405,12 +417,12 @@
             begin_drawing(),
             clear_background(BLACK),
             [[draw_texture(
-                wall_texture,
+                wall_texture if map[y][x]
+                else floor_texture,
                 int(x * grid_scale_w),
                 int(y * grid_scale_h),
                 WHITE,
-            ) for x in range(grid_size_w)
-                if map[y][x]] 
+            ) for x in range(grid_size_w)] 
                 for y in range(grid_size_h)],
             [draw_texture_rec(
                 robot_texture,
@@ -427,13 +439,18 @@
                 int(2.0),
                 YELLOW,
             ) for bullet in bullets],
-            [draw_texture(
+            [(draw_circle(
+                pickup.x + 16,
+                pickup.y + 16,
+                18,
+                YELLOW,
+            ),draw_texture(
                 shotgun_texture if pickup.weapon == "shotgun"
                 else assault_rifle_texture,
                 pickup.x,
                 pickup.y,
                 WHITE
-            ) for pickup in weapon_pickups],
+            )) for pickup in weapon_pickups],
             [draw_texture(
                 spam_texture,
                 pickup.x,
@@ -479,13 +496,25 @@
             if player.health <= 0 else None,
 
         ) if game_state == "running" else (
-            (reset_game()) 
+            (game_state := "start_screen") 
             if is_key_down(KeyboardKey.KEY_R) 
             else None,
             begin_drawing(),
             clear_background(BLACK),
-                end_msg := f"You have the DEAD. You are died :(\nRobots killed {score}\nPress R to die again :D",
+            end_msg := f"You have the DEAD. You are died :c\nRobots killed {score}\nPress R to die again :D",
             msg_width := measure_text(end_msg, dead_msg_font_size),
+            draw_texture(
+                duck_head_texture,
+                int(window_w * 0.045),
+                int(window_h * 0.70),
+                WHITE
+            ),
+            draw_texture(
+                duck_body_texture,
+                int(window_w * 0.05 + 200),
+                int(window_h * 0.76),
+                WHITE
+            ),
             draw_text(
                 end_msg, 
                 int(window_w / 2 - msg_width / 2), 
@@ -494,7 +523,24 @@
                 RED
             ),
             end_drawing(),
-        )
+        ) if game_state == "game_over" else
+            (
+            (reset_game()) 
+            if is_key_down(KeyboardKey.KEY_ENTER) 
+            else None,
+            lore_msg := "In the not-actually-very-dystopian future of some \nyears ahead, you are the Donald Duck(tm). You are on the \nrun from robotic Disney(tm) lawyer-otons2000:s trying to \nsue the game developers (and murder you), aswell as \nwalking, not talking, LLM robots that want to \nstable-diffuse your assets to death.\nDue to lack of graphical assets, these two types of robots are \nvisually (and gameplay wise due to lack of programming) \nindistinguishable.\nThankfully Donald Duck(tm) is a God fearing, \nrepublican voting, true American(tm), and is thus \nrac- i mean ARMED TO THE THEETH.\nGood Luck!\n\nPress Enter to start",
+            msg_width := measure_text(lore_msg, lore_font_size),
+            begin_drawing(),
+            clear_background(BLACK),
+            draw_text(
+                lore_msg, 
+                int(window_w / 2 - msg_width / 2), 
+                int(window_h * 0.1),
+                lore_font_size,
+                RED
+            ),
+            end_drawing(),
+        ) if game_state == "start_screen" else None
         for _ in cycle([1]))
     )),
 )
