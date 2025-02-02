@@ -42,6 +42,7 @@
     rocket_launcher_texture := load_texture("resources/images/rocket_launcher.png"),
     grenade_texture := load_texture("resources/images/grenade.png"),
     spam_texture := load_texture("resources/images/Spam.png"),
+    explosion_texture := load_texture("resources/images/Explosion.png"),
     
     wall_texture := load_texture("resources/images/BetterWoodWall.png"),
     floor_texture := load_texture("resources/images/StoneWall.png"),
@@ -224,7 +225,7 @@
     damage_cooldown_rate := 60,
     grenade_fuse := 90,
     explosion_time := 10,
-    explosion_size := 200,
+    explosion_size := 120,
 
     # Game state
 
@@ -540,7 +541,7 @@
                 int(4.0),
                 GREEN,
             ) for missile in missiles],
-            # Draw Grenades
+            # Draw Grenades & Explosions
             [(
                 draw_texture(
                     grenade_texture,
@@ -548,11 +549,11 @@
                     int(grenade.y),
                     WHITE 
                 ),
-                draw_circle(
-                    int(grenade.x + 16),
-                    int(grenade.y + 16),
-                    120,
-                    ORANGE,
+                draw_texture(
+                    explosion_texture,
+                    int(grenade.x - explosion_size / 2),
+                    int(grenade.y - explosion_size / 2),
+                    WHITE,
                 ) if grenade.fuse < explosion_time else None,
             ) for grenade in grenades],
             # Draw Pickups
