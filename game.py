@@ -104,8 +104,8 @@
         bullets.append(Bullet(
             x = x,
             y = y,
-            dx = dx + random.gauss() * shotgun_spread,
-            dy = dy + random.gauss() * shotgun_spread,
+            dx = dx + random.gauss(0, 1) * shotgun_spread,
+            dy = dy + random.gauss(0, 1) * shotgun_spread,
         ))
         for _ in range(shotgun_bullets)
     ],
