@@ -62,6 +62,7 @@
     shotgun_sound := load_sound("resources/audio/shotgun_gunshot.wav"),
     quack_sound := load_sound("resources/audio/quack.wav"),
     dead_sound := load_sound("resources/audio/dead_duck.wav"),
+    explosion_sound := load_sound("resources/audio/explosion.wav"),
     le_music := load_music_stream("resources/audio/background_music.mp3"),
     set_music_volume(le_music, music_volume),
     play_music_stream(le_music),
@@ -554,7 +555,10 @@
                     int(grenade.x - explosion_size / 2),
                     int(grenade.y - explosion_size / 2),
                     WHITE,
-                ) if grenade.fuse < explosion_time else None,
+                ) 
+                if grenade.fuse < explosion_time else None,
+                play_sound(explosion_sound) if grenade.fuse == explosion_time
+                else None
             ) for grenade in grenades],
             # Draw Pickups
             [(draw_circle(
