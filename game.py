@@ -33,13 +33,17 @@
     init_audio_device(),
 
     # Textures
+    
     player_texture := load_texture("resources/images/Player.png"),
     robot_texture := load_texture("resources/images/Robot.png"),
     pistol_texture := load_texture("resources/images/Pistol.png"),
     shotgun_texture := load_texture("resources/images/Shotgun.png"),
     assault_rifle_texture := load_texture("resources/images/MachineGun.png"),
+    rocket_launcher_texture := load_texture("resources/images/rocket_launcher.png"),
+    grenade_texture := load_texture("resources/images/grenade.png"),
     spam_texture := load_texture("resources/images/Spam.png"),
-    wall_texture := load_texture("resources/images/SimpleWood.png"),
+    
+    wall_texture := load_texture("resources/images/BetterWoodWall.png"),
     floor_texture := load_texture("resources/images/StoneWall.png"),
     duck_head_texture := load_texture("resources/images/DuckHead.png"),
     duck_body_texture := load_texture("resources/images/DuckBody.png"),
@@ -223,8 +227,8 @@
     grid_scale_h := window_h / grid_size_h,
 
     weapons := {"pistol": fire_pistol, "assault_rifle": fire_pistol, "shotgun": fire_shotgun},
-    weapon_cooldowns := {"pistol": 45, "shotgun": 45, "assault_rifle": 10},
-    weapon_ammos := {"pistol": float("inf"), "shotgun": 12, "assault_rifle": 40},
+    weapon_cooldowns := {"pistol": 45, "shotgun": 45, "assault_rifle": 10, "rocket_launcher": 60},
+    weapon_ammos := {"pistol": float("inf"), "shotgun": 12, "assault_rifle": 40, "rocket_launcher": 3},
     
     shotgun_bullets := 6,
     shotgun_spread := 0.15,
@@ -429,6 +433,7 @@
             # RENDER
             begin_drawing(),
             clear_background(BLACK),
+            # Draw Enviorment
             [[draw_texture(
                 wall_texture if map[y][x]
                 else floor_texture,
@@ -437,6 +442,7 @@
                 WHITE,
             ) for x in range(grid_size_w)] 
                 for y in range(grid_size_h)],
+            # Draw Robots
             [draw_texture_rec(
                 robot_texture,
                 (64, 0, 32, 64) if robot.dx < -abs(robot.dy)
@@ -446,12 +452,14 @@
                 (int(robot.x), int(robot.y)),
                 WHITE
             ) for robot in robots],
+            # Draw Bullets
             [draw_circle(
                 int(bullet.x),
                 int(bullet.y),
                 int(2.0),
                 YELLOW,
             ) for bullet in bullets],
+            # Draw Pickups
             [(draw_circle(
                 pickup.x + 16,
                 pickup.y + 16,
@@ -459,17 +467,21 @@
                 YELLOW,
             ),draw_texture(
                 shotgun_texture if pickup.weapon == "shotgun"
-                else assault_rifle_texture,
+                else assault_rifle_texture if pickup.weapon == "assault_rifle"
+                else rocket_launcher_texture if pickup.weapon == "rocket_launcher"
+                else grenade_texture,
                 pickup.x,
                 pickup.y,
                 WHITE
             )) for pickup in weapon_pickups],
+            # Draw Spam
             [draw_texture(
                 spam_texture,
                 pickup.x,
                 pickup.y,
                 WHITE
             ) for pickup in health_pickups],
+            # Draw Player
             draw_texture_rec(
                 player_texture,
                 (0, 0, 32, 64) if player.dx < 0
@@ -480,6 +492,16 @@
                 WHITE if player.damage_cooldown == 0
                 else RED
             ),
+            draw_texture(
+                pistol_texture if player.weapon == "pistol"
+                else shotgun_texture if player.weapon == "shotgun"
+                else assault_rifle_texture if player.weapon == "assault_rifle"
+                else None,
+                int(player.x), 
+                int(player.y),
+                WHITE
+            ),
+            # Draw GUI
             draw_rectangle(
                 int(0 + window_w * 0.8), 
                 int(0 + window_h * 0.02),
