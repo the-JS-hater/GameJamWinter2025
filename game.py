@@ -23,6 +23,7 @@
     dead_msg_font_size := 50,
     score_font_size := 15,
     lore_font_size := 50,
+    music_volume := 0.8,
 
     # Init Raylib
     
@@ -56,6 +57,10 @@
     shotgun_sound := load_sound("resources/audio/shotgun_gunshot.wav"),
     quack_sound := load_sound("resources/audio/quack.wav"),
     dead_sound := load_sound("resources/audio/dead_duck.wav"),
+    le_music := load_music_stream("resources/audio/background_music.mp3"),
+    set_music_volume(le_music, music_volume),
+    play_music_stream(le_music),
+    
 
     # Classes
     classdef := lambda name, fields: (ty := type(name, (), {
@@ -263,12 +268,13 @@
         robot_cap = 3,
         score = 0,
     ),
-
+    
+    # GAME LOOP!
     reduce(lambda _, a : None, takewhile(
         lambda _ : not window_should_close(),
         ((
             # INPUT & UPDATE
-            
+            update_music_stream(le_music),
             globals().update(robot_cap = robot_cap + 1 / 60 / 4),
             
             moved_player := player.copy_with(
