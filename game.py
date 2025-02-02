@@ -29,18 +29,19 @@
     set_target_fps(60),
     set_trace_log_level(7), 
     init_window(window_w, window_h, "game"),
-    
+    init_audio_device(),
+
     # Textures
-    player_texture := load_texture("resources/Player.png"),
-    robot_texture := load_texture("resources/Robot.png"),
-    pistol_texture := load_texture("resources/Pistol.png"),
-    shotgun_texture := load_texture("resources/Shotgun.png"),
-    assault_rifle_texture := load_texture("resources/MachineGun.png"),
-    spam_texture := load_texture("resources/Spam.png"),
-    wall_texture := load_texture("resources/SimpleWood.png"),
-    floor_texture := load_texture("resources/StoneWall.png"),
-    duck_head_texture := load_texture("resources/DuckHead.png"),
-    duck_body_texture := load_texture("resources/DuckBody.png"),
+    player_texture := load_texture("resources/images/Player.png"),
+    robot_texture := load_texture("resources/images/Robot.png"),
+    pistol_texture := load_texture("resources/images/Pistol.png"),
+    shotgun_texture := load_texture("resources/images/Shotgun.png"),
+    assault_rifle_texture := load_texture("resources/images/MachineGun.png"),
+    spam_texture := load_texture("resources/images/Spam.png"),
+    wall_texture := load_texture("resources/images/SimpleWood.png"),
+    floor_texture := load_texture("resources/images/StoneWall.png"),
+    duck_head_texture := load_texture("resources/images/DuckHead.png"),
+    duck_body_texture := load_texture("resources/images/DuckBody.png"),
         
     # Resizing the corpse textures
     duck_head_image := load_image_from_texture(duck_head_texture),
@@ -49,6 +50,12 @@
     image_resize_nn(duck_body_image, 64 * 5, 32 * 5),
     duck_head_texture := load_texture_from_image(duck_head_image),
     duck_body_texture := load_texture_from_image(duck_body_image),
+    
+    # Loading Sound effects
+    basic_gunshot_sound := load_sound("resources/audio/basic_gunshot.wav"),
+    shotgun_sound := load_sound("resources/audio/shotgun_gunshot.wav"),
+    quack_sound := load_sound("resources/audio/quack.wav"),
+    dead_sound := load_sound("resources/audio/dead_duck.wav"),
 
     # Classes
     classdef := lambda name, fields: (ty := type(name, (), {
@@ -160,6 +167,7 @@
         )))
     ) if len(health_pickups) < 1 else None,
     
+    # Path finding
     map_dist_to := lambda x, y: (
         dist_to := [[10**10] * grid_size_w for _ in range(grid_size_h)],
         queue := [(0, x, y)],
@@ -214,7 +222,7 @@
     weapon_ammos := {"pistol": float("inf"), "shotgun": 12, "assault_rifle": 40},
     
     shotgun_bullets := 6,
-    shotgun_spread := 0.25,
+    shotgun_spread := 0.15,
 
     player := Player(
         x = 960, y = 540, 
@@ -293,15 +301,16 @@
             update_cooldowns(player),
             
             # Player collides with robot
-            player.update(
+            (player.update(
                 health = player.health - 0.2,
                 damage_cooldown = damage_cooldown_rate,
+                ),
+             play_sound(quack_sound)
             ) if
                 player.damage_cooldown == 0
                 and any(
                     has_collision(player, robot) 
                 for robot in robots) else None,
-            
 
             # Fire weapon
             (
@@ -318,6 +327,8 @@
                 player.update(
                     weapon_cooldown = weapon_cooldowns[player.weapon]
                 ),
+                play_sound(basic_gunshot_sound) if player.weapon == "pistol"
+                or player.weapon == "assault_rifle" else play_sound(shotgun_sound)
             )
                 if is_key_down(KeyboardKey.KEY_SPACE) 
                     and player.weapon_cooldown == 0
@@ -492,7 +503,9 @@
 
             # Game over
 
-            (game_state := "game_over") 
+            (game_state := "game_over",
+             play_sound(dead_sound)
+            ) 
             if player.health <= 0 else None,
 
         ) if game_state == "running" else (
