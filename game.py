@@ -77,6 +77,7 @@
     Robot := classdef("Robot", ["x", "y", "dx", "dy", "w", "h"]),
     Bullet := classdef("Bullet", ["x", "y", "dx", "dy"]),
     Grenade := classdef("Grenade", ["x", "y", "fuse"]),
+    Missile := classdef("Missile", ["x", "y", "dx", "dy"]),
     Wall := classdef("Wall", ["x", "y", "w", "h"]),
     WeaponPickup := classdef("WeaponPickup", ["x", "y", "w", "h", "weapon", "ammo"]),
     HealthPickup := classdef("HealthPickup", ["x", "y", "w", "h", "health"]),
@@ -127,6 +128,15 @@
         for _ in range(shotgun_bullets)
     ],
 
+    fire_rocket := lambda x, y, dx, dy: (
+        missiles.append(Missile(
+            x = x,
+            y = y,
+            dx = dx,
+            dy = dy,
+        ))
+    ),
+
     spawn_robot := lambda: (
         robots.append(next(filter(
             lambda robot: not has_world_collision(robot)
@@ -155,7 +165,7 @@
                     ammo = weapon_ammos[weapon],
                     w = 32,
                     h = 32,
-                ))(random.choice(["shotgun", "assault_rifle", "grenade"]))
+                ))(random.choice(["shotgun", "assault_rifle", "rocket_launcher", "grenade"]))
                 for _ in cycle([1])
             ),
         )))
@@ -208,6 +218,7 @@
     # Game constants
 
     bullet_speed := 20,
+    missile_speed := 6,
     robot_speed := 1.8,
     player_speed := 2.8,
     damage_cooldown_rate := 60,
@@ -230,7 +241,7 @@
     grid_scale_w := window_w / grid_size_w,
     grid_scale_h := window_h / grid_size_h,
 
-    weapons := {"pistol": fire_pistol, "assault_rifle": fire_pistol, "shotgun": fire_shotgun},
+    weapons := {"pistol": fire_pistol, "assault_rifle": fire_pistol, "shotgun": fire_shotgun, "rocket_launcher": fire_rocket},
     weapon_cooldowns := {"pistol": 45, "shotgun": 45, "assault_rifle": 10, "rocket_launcher": 60},
     weapon_ammos := {"pistol": float("inf"), "shotgun": 12, "assault_rifle": 40, "rocket_launcher": 3, "grenade": 1},
     
@@ -251,6 +262,7 @@
 
     robots := [],
     bullets := [],
+    missiles := [],
     grenades := [],
     weapon_pickups := [],
     health_pickups := [],
@@ -275,6 +287,7 @@
         robots = [],
         bullets = [],
         grenades = [],
+        missiles = [],
         weapon_pickups = [],
         health_pickups = [],
         robot_cap = 3,
@@ -377,6 +390,30 @@
             )[-1],
             globals().update(bullets = [
                 b for b in bullets if not bullet_world_coll(b)
+            ]),
+
+            # Update missiles
+            globals().update(missiles = [
+                m.copy_with(
+                    x = m.x + missile_speed * m.dx,
+                    y = m.y + missile_speed * m.dy,
+                )
+                for m in missiles
+                if 0 <= m.x <= window_w and 0 <= m.y <= window_h
+            ]),
+            missile_coll := lambda m: (
+                tx := int(m.x / grid_scale_h),
+                ty := int(m.y / grid_scale_w),
+                0 <= tx < grid_size_w and 0 <= ty < grid_size_h and map[ty][tx] != 0
+            )[-1] or any(
+                r.x <= m.x < r.x + r.w and r.y <= m.y < r.x + r.w
+                for r in robots
+            ),
+            globals().update(missiles = [
+                m for m in missiles if not (
+                    coll := missile_coll(m),
+                    grenades.append(Grenade(x = m.x, y = m.y, fuse = explosion_time)) if coll else None,
+                )[0]
             ]),
 
             # Update grenades
@@ -496,6 +533,13 @@
                 int(2.0),
                 YELLOW,
             ) for bullet in bullets],
+            # Draw missiles
+            [draw_circle(
+                int(missile.x),
+                int(missile.y),
+                int(4.0),
+                GREEN,
+            ) for missile in missiles],
             # Draw Grenades
             [(
                 draw_texture(
@@ -548,6 +592,7 @@
                 pistol_texture if player.weapon == "pistol"
                 else shotgun_texture if player.weapon == "shotgun"
                 else assault_rifle_texture if player.weapon == "assault_rifle"
+                else rocket_launcher_texture if player.weapon == "rocket_launcher"
                 else None,
                 int(player.x), 
                 int(player.y),
