@@ -422,14 +422,14 @@
             globals().update(grenades = [
                 g.copy_with(fuse = g.fuse - 1)
                 for g in grenades
-                if not (
-                    exploded := g.fuse <= 0,
-                    globals().update(
-                        robots = [r for r in robots if hypot(r.x - g.x, r.y - g.y) > explosion_size],
-                    )
-                        if exploded else None,
-                )[0]
+                if g.fuse > 0
             ]),
+            globals().update(robots = [
+                r for r in robots if not any(
+                    hypot(r.x - g.x, r.y - g.y) < explosion_size
+                    for g in grenades if g.fuse < explosion_time
+                )
+            ])
 
             # Update robots
             ptx := int((player.x + player.w / 2) / grid_scale_w),
